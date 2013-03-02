@@ -4,6 +4,7 @@ ejs = (function(){
 
 function require(p){
     if ('fs' == p) return {};
+    if ('path' == p) return {};
     var path = require.resolve(p)
       , mod = require.modules[path];
     if (!mod) throw new Error('failed to require "' + p + '"');
@@ -205,9 +206,14 @@ var parse = exports.parse = function(str, options){
 
       if (0 == js.trim().indexOf('include')) {
         var name = js.trim().slice(7).trim();
-        if (!filename) throw new Error('filename option is required for includes');
-        var path = resolveInclude(name, filename);
-        include = read(path, 'utf8');
+        if ('templates' in options && name in options.templates) {
+          var path = name;
+          include = options.templates[name];
+        } else {
+          if (!filename) throw new Error('filename option is required for includes');
+          var path = resolveInclude(name, filename);
+          include = read(path, 'utf8');
+        }
         include = exports.parse(include, { filename: path, _with: false, open: open, close: close, compileDebug: compileDebug });
         buf.push("' + (function(){" + include + "})() + '");
         js = '';
